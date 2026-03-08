@@ -3,7 +3,7 @@ package com.fitme.backend.controller;
 import com.fitme.backend.dto.CreateDishCategoryInput;
 import com.fitme.backend.entity.DishCategory;
 import com.fitme.backend.entity.Restaurant;
-import com.fitme.backend.service.DishCategoryService;
+import com.fitme.backend.service.interfaces.DishCategoryService;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
