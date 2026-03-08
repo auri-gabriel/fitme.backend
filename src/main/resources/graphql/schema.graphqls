@@ -1,57 +1,86 @@
 type Query {
-    getAllRestaurants: [Restaurant!]!
-    getRestaurant(id: ID!): Restaurant!
+  getAllRestaurants: [Restaurant!]!
+  getRestaurant(id: ID!): Restaurant!
 }
 
 type DishCategory {
-    id: ID!
-    name: String!
+  id: ID!
+  name: String!
 }
 
 type Dish {
-    id: ID!
-    name: String!
-    price: Float!
-    image: String
-    description: String
-    category: DishCategory!
+  id: ID!
+  name: String!
+  price: Float!
+  image: String
+  description: String
+  category: DishCategory!
 }
 
 type Restaurant {
-    id: ID!
-    name: String!
-    rating: Float
-    location: String
-    deliveryTime: Int
-    image: String
-    createdAt: String
-    updatedAt: String
-    topDishes: [Dish!]!
-    categories: [DishCategory!]!
+  id: ID!
+  name: String!
+  rating: Float
+  location: String
+  deliveryTime: Int
+  image: String
+  createdAt: String
+  updatedAt: String
+  topDishes: [Dish!]!
+  categories: [DishCategory!]!
 }
 
 input CreateRestaurantInput {
-    name: String!
-    rating: Float
-    location: String
+  name: String!
+  rating: Float
+  location: String
 }
 
 input CreateDishInput {
-    name: String!
-    price: Float!
-    image: String
-    description: String
-    restaurantId: ID!
+  name: String!
+  price: Float!
+  image: String
+  description: String
+  restaurantId: ID!
 }
 
 input CreateDishCategoryInput {
-    name: String!
-    restaurantId: ID!
+  name: String!
+  restaurantId: ID!
+}
+
+input SignUpInput {
+  username: String!
+  password: String!
+  email: String
+  fullName: String
+}
+
+input LogInInput {
+  username: String!
+  password: String!
+}
+
+type AuthUser {
+  id: ID!
+  username: String!
+  createdAt: String
+  updatedAt: String
+}
+
+type Viewer {
+  user: AuthUser!
+  sessionToken: String!
+}
+
+type AuthResponse {
+  viewer: Viewer!
 }
 
 type Mutation {
-    createRestaurant(input: CreateRestaurantInput!): Restaurant!
-    createDish(input: CreateDishInput!): Dish!
-    createDishCategory(input: CreateDishCategoryInput!): DishCategory
+  createRestaurant(input: CreateRestaurantInput!): Restaurant!
+  createDish(input: CreateDishInput!): Dish!
+  createDishCategory(input: CreateDishCategoryInput!): DishCategory
+  signUp(input: SignUpInput!): AuthResponse!
+  logIn(input: LogInInput!): AuthResponse!
 }
-

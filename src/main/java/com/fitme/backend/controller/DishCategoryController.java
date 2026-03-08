@@ -7,6 +7,7 @@ import com.fitme.backend.service.interfaces.DishCategoryService;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class DishCategoryController {
     }
 
     @MutationMapping
+    @PreAuthorize("isAuthenticated()")
     public DishCategory createDishCategory(@Argument CreateDishCategoryInput input) {
         return categoryService.create(input);
     }

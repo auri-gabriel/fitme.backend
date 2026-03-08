@@ -9,6 +9,7 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
@@ -25,11 +26,13 @@ public class RestaurantController {
     }
 
     @QueryMapping
+    @PreAuthorize("isAuthenticated()")
     public List<Restaurant> getAllRestaurants() {
         return restaurantService.getAll();
     }
 
     @MutationMapping
+    @PreAuthorize("isAuthenticated()")
     public Restaurant createRestaurant(@Argument CreateRestaurantInput input) {
         Restaurant restaurant = Restaurant.builder()
                 .name(input.name())
@@ -40,6 +43,7 @@ public class RestaurantController {
     }
 
     @QueryMapping
+    @PreAuthorize("isAuthenticated()")
     public Restaurant getRestaurant(@Argument Long id) {
         return restaurantService.getRestaurantById(id);
     }

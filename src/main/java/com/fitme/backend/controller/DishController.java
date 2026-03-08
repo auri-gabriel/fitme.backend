@@ -7,6 +7,7 @@ import com.fitme.backend.service.interfaces.DishService;
 import com.fitme.backend.service.interfaces.RestaurantService;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -21,6 +22,7 @@ public class DishController {
     }
 
     @MutationMapping
+    @PreAuthorize("isAuthenticated()")
     public Dish createDish(@Argument CreateDishInput input) {
         Restaurant restaurant = restaurantService.getById(input.restaurantId());
         if (restaurant == null) {
