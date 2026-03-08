@@ -26,13 +26,11 @@ public class RestaurantController {
     }
 
     @QueryMapping
-    @PreAuthorize("isAuthenticated()")
     public List<Restaurant> getAllRestaurants() {
         return restaurantService.getAll();
     }
 
     @MutationMapping
-    @PreAuthorize("isAuthenticated()")
     public Restaurant createRestaurant(@Argument CreateRestaurantInput input) {
         Restaurant restaurant = Restaurant.builder()
                 .name(input.name())
@@ -43,7 +41,6 @@ public class RestaurantController {
     }
 
     @QueryMapping
-    @PreAuthorize("isAuthenticated()")
     public Restaurant getRestaurant(@Argument Long id) {
         return restaurantService.getRestaurantById(id);
     }
