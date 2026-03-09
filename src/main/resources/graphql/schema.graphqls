@@ -1,6 +1,22 @@
 type Query {
   getAllRestaurants: [Restaurant!]!
   getRestaurant(id: ID!): Restaurant!
+  getMyOrders: [Order!]!
+  getMyOrder(id: ID!): Order!
+}
+
+enum OrderStatus {
+  CREATED
+  PAYMENT_PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
 }
 
 type DishCategory {
@@ -77,10 +93,71 @@ type AuthResponse {
   viewer: Viewer!
 }
 
+type OrderItem {
+  id: ID!
+  dishId: ID!
+  dishName: String!
+  unitPrice: Float!
+  quantity: Int!
+  restaurantId: ID!
+  restaurantName: String!
+  lineTotal: Float!
+}
+
+type PaymentAttempt {
+  id: ID!
+  status: PaymentStatus!
+  provider: String
+  providerTransactionId: String
+  paymentReference: String
+  message: String
+  createdAt: String
+}
+
+type Order {
+  id: ID!
+  status: OrderStatus!
+  totalAmount: Float!
+  paymentReference: String
+  createdAt: String
+  updatedAt: String
+  items: [OrderItem!]!
+}
+
+type CreateOrderResponse {
+  order: Order!
+  paymentAttempt: PaymentAttempt
+  message: String!
+}
+
+type ConfirmPaymentResponse {
+  order: Order!
+  paymentAttempt: PaymentAttempt
+  message: String!
+}
+
+input CreateOrderItemInput {
+  dishId: ID!
+  quantity: Int!
+}
+
+input CreateOrderInput {
+  items: [CreateOrderItemInput!]!
+  idempotencyKey: String!
+}
+
+input ConfirmPaymentInput {
+  orderId: ID!
+  paymentReference: String!
+  idempotencyKey: String!
+}
+
 type Mutation {
   createRestaurant(input: CreateRestaurantInput!): Restaurant!
   createDish(input: CreateDishInput!): Dish!
   createDishCategory(input: CreateDishCategoryInput!): DishCategory
   signUp(input: SignUpInput!): AuthResponse!
   logIn(input: LogInInput!): AuthResponse!
+  createOrder(input: CreateOrderInput!): CreateOrderResponse!
+  confirmPayment(input: ConfirmPaymentInput!): ConfirmPaymentResponse!
 }
