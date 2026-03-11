@@ -3,6 +3,7 @@ package com.fitme.backend.service.impl;
 import com.fitme.backend.dto.*;
 import com.fitme.backend.entity.*;
 import com.fitme.backend.repository.AppUserRepository;
+import com.fitme.backend.repository.AppUserAddressRepository;
 import com.fitme.backend.repository.DishRepository;
 import com.fitme.backend.repository.OrderRepository;
 import com.fitme.backend.repository.PaymentAttemptRepository;
@@ -31,6 +32,9 @@ class OrderServiceImplTest {
 
   @Mock
   private AppUserRepository appUserRepository;
+
+  @Mock
+  private AppUserAddressRepository appUserAddressRepository;
 
   @Mock
   private DishRepository dishRepository;
@@ -63,6 +67,16 @@ class OrderServiceImplTest {
     Dish dish = Dish.builder().id(10L).name("Bowl").price(12.5).restaurant(restaurant).build();
 
     when(appUserRepository.findByUsername("john")).thenReturn(Optional.of(user));
+    when(appUserAddressRepository.findByAppUserIdAndId(1L, 101L))
+        .thenReturn(Optional.of(AppUserAddress.builder()
+            .id(101L)
+            .appUser(user)
+            .label("Home")
+            .line1("123 Main St")
+            .city("Lisbon")
+            .postalCode("1000-001")
+            .isDefault(true)
+            .build()));
     when(orderRepository.findByAppUserIdAndIdempotencyKey(1L, "idem-1")).thenReturn(Optional.empty());
     when(dishRepository.findAllById(List.of(10L))).thenReturn(List.of(dish));
     when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
@@ -71,7 +85,7 @@ class OrderServiceImplTest {
       return order;
     });
 
-    CreateOrderInput input = new CreateOrderInput(List.of(new CreateOrderItemInput(10L, 2)), "idem-1");
+    CreateOrderInput input = new CreateOrderInput(List.of(new CreateOrderItemInput(10L, 2)), "idem-1", 101L);
 
     CreateOrderResponseDto response = orderService.createOrder(input);
 
@@ -146,7 +160,7 @@ class OrderServiceImplTest {
     when(paymentAttemptRepository.findTopByOrderIdOrderByCreatedAtDesc(500L)).thenReturn(Optional.empty());
 
     CreateOrderResponseDto response = orderService.createOrder(
-        new CreateOrderInput(List.of(new CreateOrderItemInput(10L, 1)), "idem-existing"));
+        new CreateOrderInput(List.of(new CreateOrderItemInput(10L, 1)), "idem-existing", 101L));
 
     assertEquals(500L, response.order().id());
     assertEquals("Order already created for this idempotency key", response.message());

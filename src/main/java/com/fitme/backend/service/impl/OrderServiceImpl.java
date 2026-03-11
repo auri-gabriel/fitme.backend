@@ -3,6 +3,7 @@ package com.fitme.backend.service.impl;
 import com.fitme.backend.dto.*;
 import com.fitme.backend.entity.*;
 import com.fitme.backend.repository.AppUserRepository;
+import com.fitme.backend.repository.AppUserAddressRepository;
 import com.fitme.backend.repository.DishRepository;
 import com.fitme.backend.repository.OrderRepository;
 import com.fitme.backend.repository.PaymentAttemptRepository;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
   private final AppUserRepository appUserRepository;
+  private final AppUserAddressRepository appUserAddressRepository;
   private final DishRepository dishRepository;
   private final OrderRepository orderRepository;
   private final PaymentAttemptRepository paymentAttemptRepository;
@@ -28,11 +30,13 @@ public class OrderServiceImpl implements OrderService {
 
   public OrderServiceImpl(
       AppUserRepository appUserRepository,
+      AppUserAddressRepository appUserAddressRepository,
       DishRepository dishRepository,
       OrderRepository orderRepository,
       PaymentAttemptRepository paymentAttemptRepository,
       PaymentGateway paymentGateway) {
     this.appUserRepository = appUserRepository;
+    this.appUserAddressRepository = appUserAddressRepository;
     this.dishRepository = dishRepository;
     this.orderRepository = orderRepository;
     this.paymentAttemptRepository = paymentAttemptRepository;
@@ -51,9 +55,11 @@ public class OrderServiceImpl implements OrderService {
     if (input.items() == null || input.items().isEmpty()) {
       throw new IllegalArgumentException("Order must have at least one item");
     }
+    if (input.addressId() == null) {
+      throw new IllegalArgumentException("Address is required");
+    }
 
     AppUser currentUser = getCurrentUser();
-
     Optional<Order> existing = orderRepository.findByAppUserIdAndIdempotencyKey(
         currentUser.getId(), input.idempotencyKey());
     if (existing.isPresent()) {
@@ -64,6 +70,10 @@ public class OrderServiceImpl implements OrderService {
       return new CreateOrderResponseDto(toOrderDto(existingOrder), toPaymentAttemptDto(existingAttempt),
           "Order already created for this idempotency key");
     }
+
+    AppUserAddress deliveryAddress = appUserAddressRepository
+        .findByAppUserIdAndId(currentUser.getId(), input.addressId())
+        .orElseThrow(() -> new IllegalArgumentException("Address not found"));
 
     Map<Long, Integer> quantitiesByDishId = aggregateQuantities(input.items());
     List<Long> dishIds = new ArrayList<>(quantitiesByDishId.keySet());
@@ -83,6 +93,12 @@ public class OrderServiceImpl implements OrderService {
         .status(OrderStatus.CREATED)
         .totalAmount(0D)
         .idempotencyKey(input.idempotencyKey())
+        .deliveryAddressId(deliveryAddress.getId())
+        .deliveryAddressLabel(deliveryAddress.getLabel())
+        .deliveryAddressLine1(deliveryAddress.getLine1())
+        .deliveryAddressLine2(deliveryAddress.getLine2())
+        .deliveryAddressCity(deliveryAddress.getCity())
+        .deliveryAddressPostalCode(deliveryAddress.getPostalCode())
         .build();
 
     for (Map.Entry<Long, Integer> entry : quantitiesByDishId.entrySet()) {

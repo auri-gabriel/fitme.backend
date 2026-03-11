@@ -3,6 +3,7 @@ type Query {
   getRestaurant(id: ID!): Restaurant!
   getMyOrders: [Order!]!
   getMyOrder(id: ID!): Order!
+  getMyAddresses: [UserAddress!]!
 }
 
 enum OrderStatus {
@@ -114,6 +115,18 @@ type PaymentAttempt {
   createdAt: String
 }
 
+type UserAddress {
+  id: ID!
+  label: String!
+  line1: String!
+  line2: String
+  city: String!
+  postalCode: String!
+  isDefault: Boolean!
+  createdAt: String
+  updatedAt: String
+}
+
 type Order {
   id: ID!
   status: OrderStatus!
@@ -144,6 +157,16 @@ input CreateOrderItemInput {
 input CreateOrderInput {
   items: [CreateOrderItemInput!]!
   idempotencyKey: String!
+  addressId: ID!
+}
+
+input CreateAddressInput {
+  label: String!
+  line1: String!
+  line2: String
+  city: String!
+  postalCode: String!
+  isDefault: Boolean
 }
 
 input ConfirmPaymentInput {
@@ -158,6 +181,7 @@ type Mutation {
   createDishCategory(input: CreateDishCategoryInput!): DishCategory
   signUp(input: SignUpInput!): AuthResponse!
   logIn(input: LogInInput!): AuthResponse!
+  createMyAddress(input: CreateAddressInput!): UserAddress!
   createOrder(input: CreateOrderInput!): CreateOrderResponse!
   confirmPayment(input: ConfirmPaymentInput!): ConfirmPaymentResponse!
 }

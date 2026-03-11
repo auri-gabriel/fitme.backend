@@ -4,17 +4,15 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "app_user_addresses")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Order {
+public class AppUserAddress {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,50 +22,34 @@ public class Order {
   @JoinColumn(name = "app_user_id", nullable = false)
   private AppUser appUser;
 
-  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private OrderStatus status;
-
-  @Column(nullable = false)
-  private Double totalAmount;
+  private String label;
 
   @Column(nullable = false)
-  private String idempotencyKey;
+  private String line1;
+
+  private String line2;
 
   @Column(nullable = false)
-  private Long deliveryAddressId;
+  private String city;
 
   @Column(nullable = false)
-  private String deliveryAddressLabel;
+  private String postalCode;
 
   @Column(nullable = false)
-  private String deliveryAddressLine1;
-
-  private String deliveryAddressLine2;
-
-  @Column(nullable = false)
-  private String deliveryAddressCity;
-
-  @Column(nullable = false)
-  private String deliveryAddressPostalCode;
-
-  private String paymentReference;
+  private Boolean isDefault;
 
   private LocalDateTime createdAt;
 
   private LocalDateTime updatedAt;
 
-  @Version
-  private Long version;
-
-  @Builder.Default
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<OrderItem> items = new ArrayList<>();
-
   @PrePersist
   public void onCreate() {
     createdAt = LocalDateTime.now();
     updatedAt = createdAt;
+    if (isDefault == null) {
+      isDefault = false;
+    }
   }
 
   @PreUpdate
