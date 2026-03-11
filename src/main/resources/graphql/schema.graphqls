@@ -182,6 +182,8 @@ type Mutation {
   signUp(input: SignUpInput!): AuthResponse!
   logIn(input: LogInInput!): AuthResponse!
   createMyAddress(input: CreateAddressInput!): UserAddress!
+  setDefaultAddress(addressId: ID!): UserAddress!
+  deleteMyAddress(addressId: ID!): Boolean!
   createOrder(input: CreateOrderInput!): CreateOrderResponse!
   confirmPayment(input: ConfirmPaymentInput!): ConfirmPaymentResponse!
 }

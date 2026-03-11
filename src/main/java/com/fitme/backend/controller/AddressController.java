@@ -31,4 +31,16 @@ public class AddressController {
   public List<UserAddressDto> getMyAddresses() {
     return addressService.getMyAddresses();
   }
+
+  @MutationMapping
+  @PreAuthorize("isAuthenticated()")
+  public UserAddressDto setDefaultAddress(@Argument Long addressId) {
+    return addressService.setDefaultAddress(addressId);
+  }
+
+  @MutationMapping
+  @PreAuthorize("isAuthenticated()")
+  public Boolean deleteMyAddress(@Argument Long addressId) {
+    return addressService.deleteMyAddress(addressId);
+  }
 }

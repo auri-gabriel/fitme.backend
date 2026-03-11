@@ -9,4 +9,8 @@ public interface AddressService {
   UserAddressDto createMyAddress(CreateAddressInput input);
 
   List<UserAddressDto> getMyAddresses();
+
+  UserAddressDto setDefaultAddress(Long addressId);
+
+  boolean deleteMyAddress(Long addressId);
 }

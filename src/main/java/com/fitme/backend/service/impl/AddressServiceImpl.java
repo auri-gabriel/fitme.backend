@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
+@SuppressWarnings("null")
 public class AddressServiceImpl implements AddressService {
 
   private final AppUserAddressRepository appUserAddressRepository;
@@ -82,6 +83,55 @@ public class AddressServiceImpl implements AddressService {
         .stream()
         .map(this::toDto)
         .toList();
+  }
+
+  @Override
+  @Transactional
+  public UserAddressDto setDefaultAddress(Long addressId) {
+    if (addressId == null) {
+      throw new IllegalArgumentException("Address id is required");
+    }
+
+    AppUser currentUser = getCurrentUser();
+    AppUserAddress selectedAddress = appUserAddressRepository
+        .findByAppUserIdAndId(currentUser.getId(), addressId)
+        .orElseThrow(() -> new IllegalArgumentException("Address not found"));
+
+    List<AppUserAddress> addresses = appUserAddressRepository.findByAppUserId(currentUser.getId());
+    for (AppUserAddress address : addresses) {
+      address.setIsDefault(address.getId().equals(selectedAddress.getId()));
+    }
+    appUserAddressRepository.saveAll(addresses);
+
+    return toDto(selectedAddress);
+  }
+
+  @Override
+  @Transactional
+  public boolean deleteMyAddress(Long addressId) {
+    if (addressId == null) {
+      throw new IllegalArgumentException("Address id is required");
+    }
+
+    AppUser currentUser = getCurrentUser();
+    AppUserAddress address = appUserAddressRepository
+        .findByAppUserIdAndId(currentUser.getId(), addressId)
+        .orElseThrow(() -> new IllegalArgumentException("Address not found"));
+
+    boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());
+    appUserAddressRepository.delete(address);
+
+    if (wasDefault) {
+      List<AppUserAddress> remainingAddresses = appUserAddressRepository
+          .findByAppUserIdOrderByIsDefaultDescCreatedAtDesc(currentUser.getId());
+      if (!remainingAddresses.isEmpty()) {
+        AppUserAddress fallback = remainingAddresses.get(0);
+        fallback.setIsDefault(true);
+        appUserAddressRepository.save(fallback);
+      }
+    }
+
+    return true;
   }
 
   private AppUser getCurrentUser() {

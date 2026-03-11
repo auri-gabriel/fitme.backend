@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface AppUserAddressRepository extends JpaRepository<AppUserAddress, Long> {
   List<AppUserAddress> findByAppUserIdOrderByIsDefaultDescCreatedAtDesc(Long appUserId);
 
+  List<AppUserAddress> findByAppUserId(Long appUserId);
+
   Optional<AppUserAddress> findByAppUserIdAndId(Long appUserId, Long id);
 
   long countByAppUserId(Long appUserId);
