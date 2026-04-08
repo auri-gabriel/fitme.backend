@@ -3,6 +3,7 @@ package com.fitme.backend.service.impl;
 import com.fitme.backend.config.JwtService;
 import com.fitme.backend.dto.*;
 import com.fitme.backend.entity.AppUser;
+import com.fitme.backend.mappers.AuthMapper;
 import com.fitme.backend.repository.AppUserRepository;
 import com.fitme.backend.service.interfaces.AuthService;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,16 +21,19 @@ public class AuthServiceImpl implements AuthService {
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final AuthenticationManager authenticationManager;
+  private final AuthMapper authMapper;
 
   public AuthServiceImpl(
       AppUserRepository appUserRepository,
       PasswordEncoder passwordEncoder,
       JwtService jwtService,
-      AuthenticationManager authenticationManager) {
+      AuthenticationManager authenticationManager,
+      AuthMapper authMapper) {
     this.appUserRepository = appUserRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
     this.authenticationManager = authenticationManager;
+    this.authMapper = authMapper;
   }
 
   @Override
@@ -58,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
     UserDetails userDetails = toUserDetails(savedUser);
     String token = jwtService.generateToken(userDetails);
 
-    return toAuthResponse(savedUser, token);
+    return authMapper.toDto(savedUser, token);
   }
 
   @Override
@@ -72,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
     UserDetails userDetails = toUserDetails(appUser);
     String token = jwtService.generateToken(userDetails);
 
-    return toAuthResponse(appUser, token);
+    return authMapper.toDto(appUser, token);
   }
 
   private UserDetails toUserDetails(AppUser appUser) {
@@ -82,13 +86,4 @@ public class AuthServiceImpl implements AuthService {
         .build();
   }
 
-  private AuthResponseDto toAuthResponse(AppUser appUser, String token) {
-    AuthUserDto authUserDto = new AuthUserDto(
-        appUser.getId(),
-        appUser.getUsername(),
-        appUser.getCreatedAt() != null ? appUser.getCreatedAt().toString() : null,
-        appUser.getUpdatedAt() != null ? appUser.getUpdatedAt().toString() : null);
-    AuthViewerDto viewerDto = new AuthViewerDto(authUserDto, token);
-    return new AuthResponseDto(viewerDto);
-  }
 }
