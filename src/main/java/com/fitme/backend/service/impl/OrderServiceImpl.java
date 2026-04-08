@@ -3,6 +3,7 @@ package com.fitme.backend.service.impl;
 import com.fitme.backend.dto.*;
 import com.fitme.backend.entity.*;
 import com.fitme.backend.mappers.OrderMapper;
+import com.fitme.backend.mappers.PaymentAttemptMapper;
 import com.fitme.backend.repository.AppUserRepository;
 import com.fitme.backend.repository.DishRepository;
 import com.fitme.backend.repository.OrderRepository;
@@ -27,6 +28,7 @@ public class OrderServiceImpl implements OrderService {
   private final PaymentAttemptRepository paymentAttemptRepository;
   private final PaymentGateway paymentGateway;
   private final OrderMapper orderMapper;
+  private final PaymentAttemptMapper paymentAttemptMapper;
 
   public OrderServiceImpl(
       AppUserRepository appUserRepository,
@@ -34,13 +36,15 @@ public class OrderServiceImpl implements OrderService {
       OrderRepository orderRepository,
       PaymentAttemptRepository paymentAttemptRepository,
       PaymentGateway paymentGateway,
-      OrderMapper orderMapper) {
+      OrderMapper orderMapper,
+      PaymentAttemptMapper paymentAttemptMapper) {
     this.appUserRepository = appUserRepository;
     this.dishRepository = dishRepository;
     this.orderRepository = orderRepository;
     this.paymentAttemptRepository = paymentAttemptRepository;
     this.paymentGateway = paymentGateway;
     this.orderMapper = orderMapper;
+    this.paymentAttemptMapper = paymentAttemptMapper;
   }
 
   @Override
@@ -65,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
       PaymentAttempt existingAttempt = paymentAttemptRepository
           .findTopByOrderIdOrderByCreatedAtDesc(existingOrder.getId())
           .orElse(null);
-      return new CreateOrderResponseDto(orderMapper.toDto(existingOrder), toPaymentAttemptDto(existingAttempt),
+      return new CreateOrderResponseDto(orderMapper.toDto(existingOrder), paymentAttemptMapper.toDto(existingAttempt),
           "Order already created for this idempotency key");
     }
 
@@ -141,7 +145,7 @@ public class OrderServiceImpl implements OrderService {
       PaymentAttempt attempt = previousAttempt.get();
       return new ConfirmPaymentResponseDto(
           orderMapper.toDto(order),
-          toPaymentAttemptDto(attempt),
+          paymentAttemptMapper.toDto(attempt),
           "Payment already confirmed for this idempotency key");
     }
 
@@ -172,7 +176,7 @@ public class OrderServiceImpl implements OrderService {
 
     return new ConfirmPaymentResponseDto(
         orderMapper.toDto(savedOrder),
-        toPaymentAttemptDto(paymentAttemptRepository.save(attempt)),
+        paymentAttemptMapper.toDto(paymentAttemptRepository.save(attempt)),
         gatewayResult.message());
   }
 
@@ -221,18 +225,4 @@ public class OrderServiceImpl implements OrderService {
     return quantities;
   }
 
-  private PaymentAttemptDto toPaymentAttemptDto(PaymentAttempt paymentAttempt) {
-    if (paymentAttempt == null) {
-      return null;
-    }
-
-    return new PaymentAttemptDto(
-        paymentAttempt.getId(),
-        paymentAttempt.getStatus(),
-        paymentAttempt.getProvider(),
-        paymentAttempt.getProviderTransactionId(),
-        paymentAttempt.getPaymentReference(),
-        paymentAttempt.getMessage(),
-        paymentAttempt.getCreatedAt() != null ? paymentAttempt.getCreatedAt().toString() : null);
-  }
 }
