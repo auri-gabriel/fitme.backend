@@ -2,6 +2,7 @@ package com.fitme.backend.service.impl;
 
 import com.fitme.backend.dto.*;
 import com.fitme.backend.entity.*;
+import com.fitme.backend.mappers.OrderMapper;
 import com.fitme.backend.repository.AppUserRepository;
 import com.fitme.backend.repository.DishRepository;
 import com.fitme.backend.repository.OrderRepository;
@@ -25,18 +26,21 @@ public class OrderServiceImpl implements OrderService {
   private final OrderRepository orderRepository;
   private final PaymentAttemptRepository paymentAttemptRepository;
   private final PaymentGateway paymentGateway;
+  private final OrderMapper orderMapper;
 
   public OrderServiceImpl(
       AppUserRepository appUserRepository,
       DishRepository dishRepository,
       OrderRepository orderRepository,
       PaymentAttemptRepository paymentAttemptRepository,
-      PaymentGateway paymentGateway) {
+      PaymentGateway paymentGateway,
+      OrderMapper orderMapper) {
     this.appUserRepository = appUserRepository;
     this.dishRepository = dishRepository;
     this.orderRepository = orderRepository;
     this.paymentAttemptRepository = paymentAttemptRepository;
     this.paymentGateway = paymentGateway;
+    this.orderMapper = orderMapper;
   }
 
   @Override
@@ -61,7 +65,7 @@ public class OrderServiceImpl implements OrderService {
       PaymentAttempt existingAttempt = paymentAttemptRepository
           .findTopByOrderIdOrderByCreatedAtDesc(existingOrder.getId())
           .orElse(null);
-      return new CreateOrderResponseDto(toOrderDto(existingOrder), toPaymentAttemptDto(existingAttempt),
+      return new CreateOrderResponseDto(orderMapper.toDto(existingOrder), toPaymentAttemptDto(existingAttempt),
           "Order already created for this idempotency key");
     }
 
@@ -108,7 +112,7 @@ public class OrderServiceImpl implements OrderService {
     order.setItems(orderItems);
 
     Order saved = orderRepository.save(order);
-    return new CreateOrderResponseDto(toOrderDto(saved), null, "Order created. Awaiting payment confirmation");
+    return new CreateOrderResponseDto(orderMapper.toDto(saved), null, "Order created. Awaiting payment confirmation");
   }
 
   @Override
@@ -136,7 +140,7 @@ public class OrderServiceImpl implements OrderService {
     if (previousAttempt.isPresent()) {
       PaymentAttempt attempt = previousAttempt.get();
       return new ConfirmPaymentResponseDto(
-          toOrderDto(order),
+          orderMapper.toDto(order),
           toPaymentAttemptDto(attempt),
           "Payment already confirmed for this idempotency key");
     }
@@ -167,7 +171,7 @@ public class OrderServiceImpl implements OrderService {
         .build();
 
     return new ConfirmPaymentResponseDto(
-        toOrderDto(savedOrder),
+        orderMapper.toDto(savedOrder),
         toPaymentAttemptDto(paymentAttemptRepository.save(attempt)),
         gatewayResult.message());
   }
@@ -177,7 +181,7 @@ public class OrderServiceImpl implements OrderService {
   public List<OrderDto> getMyOrders() {
     AppUser currentUser = getCurrentUser();
     List<Order> orders = orderRepository.findByAppUserIdOrderByCreatedAtDesc(currentUser.getId());
-    return orders.stream().map(this::toOrderDto).toList();
+    return orders.stream().map(order -> orderMapper.toDto(order)).toList();
   }
 
   @Override
@@ -191,7 +195,7 @@ public class OrderServiceImpl implements OrderService {
     Order order = orderRepository.findByAppUserIdAndId(currentUser.getId(), id)
         .orElseThrow(() -> new IllegalArgumentException("Order not found"));
 
-    return toOrderDto(order);
+    return orderMapper.toDto(order);
   }
 
   private AppUser getCurrentUser() {
@@ -215,33 +219,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     return quantities;
-  }
-
-  private OrderDto toOrderDto(Order order) {
-    List<OrderItemDto> orderItems = order.getItems().stream()
-        .map(this::toOrderItemDto)
-        .toList();
-
-    return new OrderDto(
-        order.getId(),
-        order.getStatus(),
-        order.getTotalAmount(),
-        order.getPaymentReference(),
-        order.getCreatedAt() != null ? order.getCreatedAt().toString() : null,
-        order.getUpdatedAt() != null ? order.getUpdatedAt().toString() : null,
-        orderItems);
-  }
-
-  private OrderItemDto toOrderItemDto(OrderItem item) {
-    return new OrderItemDto(
-        item.getId(),
-        item.getDishId(),
-        item.getDishName(),
-        item.getUnitPrice(),
-        item.getQuantity(),
-        item.getRestaurantId(),
-        item.getRestaurantName(),
-        item.getUnitPrice() * item.getQuantity());
   }
 
   private PaymentAttemptDto toPaymentAttemptDto(PaymentAttempt paymentAttempt) {
