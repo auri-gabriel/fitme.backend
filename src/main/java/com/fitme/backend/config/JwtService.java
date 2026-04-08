@@ -2,7 +2,6 @@ package com.fitme.backend.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,10 +35,10 @@ public class JwtService {
     Date expiration = new Date(now.getTime() + jwtExpirationMs);
 
     return Jwts.builder()
-        .setSubject(userDetails.getUsername())
-        .setIssuedAt(now)
-        .setExpiration(expiration)
-        .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+        .subject(userDetails.getUsername())
+        .issuedAt(now)
+        .expiration(expiration)
+        .signWith(getSigningKey(), Jwts.SIG.HS256)
         .compact();
   }
 
